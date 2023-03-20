@@ -1,19 +1,16 @@
 import cv2
-import time
 import os
-import math
 import handTrackingModule as htm
 
 class FingerCounter:
-    def __init__(self, wCam=640, hCam=480, detectionCon=0.75, images_folder="CountFinger/images"):
-        self.cap = cv2.VideoCapture(0)
-        self.cap.set(3, wCam)
-        self.cap.set(4, hCam)
+    def __init__(self,  detectionCon=0.75, images_folder="CountFinger/images",draw=True):
         self.detector = htm.handDetector(detectionCon=detectionCon)
-        self.images_folder = images_folder
-        self.overlayList = self.load_images()
+        if(draw):
+            self.images_folder = images_folder
+            self.overlayList = self.loadImages()
+        self.draw = draw
 
-    def load_images(self):
+    def loadImages(self):
         myList = os.listdir(self.images_folder)
         myList.sort()
         overlayList = []
@@ -36,9 +33,8 @@ class FingerCounter:
                     count = 1
         return count
 
-    def count_fingers(self):
-        success, img = self.cap.read()
-        img = cv2.flip(img, 1)
+    def countFingers(self,img):
+        
         img = self.detector.findHands(img)
         imgNumber = 0
         lmlist = self.detector.findPosition(img, draw=False)
@@ -51,22 +47,25 @@ class FingerCounter:
             count = [self.fingerIsopen(indexFinger), self.fingerIsopen(middleFinger),
                      self.fingerIsopen(ringFinger), self.fingerIsopen(pinkyFinger), self.fingerIsopen(thumb, 0)]
             imgNumber = sum(count)
-        h,w,c = self.overlayList[imgNumber].shape
-        img[0:h, 0:w] = self.overlayList[imgNumber]
+        if(self.draw):
+            h,w,c = self.overlayList[imgNumber].shape
+            img[0:h, 0:w] = self.overlayList[imgNumber]
+        
+        return imgNumber,img
         
         
-        cv2.imshow('Image', img)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            self.cap.release()
-            cv2.destroyAllWindows()
-            return imgNumber
+        
 
 def main():
-    finger_counter = FingerCounter()
+    
+    cap = cv2.VideoCapture(0)
+    Counter=FingerCounter(draw=False)
     while True:
-        finger_count = finger_counter.count_fingers()
-        if finger_count is not None:
-            print(f"Finger count: {finger_count}")
+        success, img = cap.read()
+        img=cv2.flip(img,1)
+        fingerCount,img=Counter.countFingers(img)
+        cv2.imshow("Image", img)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
 
