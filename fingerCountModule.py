@@ -2,7 +2,7 @@ import cv2
 import os
 import handTrackingModule as htm
 
-class FingerCounter:
+class FingerCounter():
     def __init__(self,  detectionCon=0.75, images_folder="CountFinger/images",draw=True):
         self.detector = htm.handDetector(detectionCon=detectionCon)
         if(draw):
